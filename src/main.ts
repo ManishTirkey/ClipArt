@@ -153,8 +153,20 @@ function setupTray() {
 function updateTrayMenu() {
   if (!tray) return;
   const anyVisible = areAnyVisible();
+  const isAutoStart = app.getLoginItemSettings().openAtLogin;
   const menu = Menu.buildFromTemplate([
     { label: anyVisible ? 'Hide' : 'Show', click: () => toggleAll() },
+    { type: 'separator' },
+    { 
+      label: 'Start at Login', 
+      type: 'checkbox', 
+      checked: isAutoStart,
+      click: () => {
+        const newState = !isAutoStart;
+        app.setLoginItemSettings({ openAtLogin: newState, openAsHidden: true });
+        updateTrayMenu();
+      }
+    },
     { type: 'separator' },
     { label: 'Exit', click: () => app.quit() }
   ]);

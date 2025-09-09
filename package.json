@@ -29,6 +29,7 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
+    "auto-launch": "^5.0.6",
     "electron-updater": "^6.6.2"
   }
 }
