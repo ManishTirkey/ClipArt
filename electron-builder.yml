@@ -13,6 +13,11 @@ directories:
 extraMetadata:
   main: dist/main.js
 
+publish:
+  - provider: github
+    owner: ManishTirkey
+    repo: clipART
+
 win:
   icon: src/icon.ico
   target:
@@ -20,14 +25,19 @@ win:
   artifactName: "${productName}-${version}-win-${arch}.${ext}"
   publisherName: "ClipArt"
   legalTrademarks: "ClipArt"
+  signAndEditExecutable: false
 nsis:
-  oneClick: false
-  perMachine: false
-  allowElevation: true
-  allowToChangeInstallationDirectory: true
-  createDesktopShortcut: true
+  runAfterFinish: true
+  createDesktopShortcut: false
   createStartMenuShortcut: true
   shortcutName: ClipArt
+  oneClick: false
+  installerIcon: src/icon.ico
+  installerHeaderIcon: src/icon.ico
+  uninstallerIcon: src/icon.ico
+  uninstallDisplayName: ClipArt
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: true
 
 mac:
   icon: src/icon.png
@@ -45,7 +55,6 @@ linux:
   category: Utility
   target:
     - AppImage
-    - deb
   artifactName: "${productName}-${version}-linux-${arch}.${ext}"
 
 
