@@ -23,7 +23,6 @@ win:
   target:
     - nsis
   artifactName: "${productName}-${version}-win-${arch}.${ext}"
-  publisherName: "ClipArt"
   legalTrademarks: "ClipArt"
   signAndEditExecutable: false
 nsis:

@@ -16,4 +16,4 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 electron-builder.yml.old
-
+release/*
