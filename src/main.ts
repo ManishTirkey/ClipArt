@@ -17,6 +17,26 @@ let clipHistory: ClipItem[] = [];
 let lastClipboardText = '';
 let firstCopyShown = false; // retained but no longer used for gating visibility
 
+function areAnyVisible(): boolean {
+  return Array.from(windowsByDisplayId.values()).some(w => w.isVisible());
+}
+
+function showAll() {
+  for (const w of windowsByDisplayId.values()) w.show();
+}
+
+function showAllInactive() {
+  for (const w of windowsByDisplayId.values()) w.showInactive();
+}
+
+function hideAll() {
+  for (const w of windowsByDisplayId.values()) w.hide();
+}
+
+function toggleAll() {
+  if (areAnyVisible()) hideAll(); else showAll();
+}
+
 function createWindowForDisplay(display: Electron.Display) {
   const { workArea, id } = display;
   const width = 360;
@@ -89,20 +109,14 @@ function pollClipboard() {
   if (current && current !== lastClipboardText) {
     lastClipboardText = current;
     addClipFromText(current);
-    const anyVisible = Array.from(windowsByDisplayId.values()).some(w => w.isVisible());
-    if (!anyVisible) {
-      for (const win of windowsByDisplayId.values()) win.showInactive();
-    }
+    if (!areAnyVisible()) showAllInactive();
   }
 }
 
 function registerShortcuts() {
   // Toggle visibility: Ctrl+Alt+F12
   globalShortcut.register('Control+Alt+F12', () => {
-    const anyVisible = Array.from(windowsByDisplayId.values()).some(w => w.isVisible());
-    for (const w of windowsByDisplayId.values()) {
-      if (anyVisible) w.hide(); else w.show();
-    }
+    toggleAll();
   });
 
   // Slots F1..F10 for quick paste
@@ -126,19 +140,25 @@ function setupTray() {
       return; // skip tray if icon is missing
     }
     tray = new Tray(iconPath);
-    const menu = Menu.buildFromTemplate([
-      { label: 'Show', click: () => { for (const w of windowsByDisplayId.values()) w.show(); } },
-      { type: 'separator' },
-      { label: 'Quit', click: () => app.quit() }
-    ]);
     tray.setToolTip('ClipArt');
-    tray.setContextMenu(menu);
+    updateTrayMenu();
     tray.on('click', () => {
-      for (const w of windowsByDisplayId.values()) w.show();
+      toggleAll();
     });
   } catch (err) {
     // ignore tray errors in dev
   }
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+  const anyVisible = areAnyVisible();
+  const menu = Menu.buildFromTemplate([
+    { label: anyVisible ? 'Hide' : 'Show', click: () => toggleAll() },
+    { type: 'separator' },
+    { label: 'Exit', click: () => app.quit() }
+  ]);
+  tray.setContextMenu(menu);
 }
 
 app.whenReady().then(() => {
