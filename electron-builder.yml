@@ -1,0 +1,15 @@
+appId: com.example.clipart
+productName: clipART
+files:
+  - dist/**/*
+  - package.json
+directories:
+  output: release
+extraMetadata:
+  main: dist/main.js
+win:
+  target:
+    - nsis
+asar: true
+
+
