@@ -23,9 +23,14 @@ function render(clips: ClipItem[], highlightId?: string) {
     .join('');
   appRoot.innerHTML = `
     <div class="container">
-      <div class="header">ClipArt</div>
-      <div class="list">${list || '<div class="empty">Copy something with Ctrl+C…</div>'}</div>
-      <div class="footer">Ctrl+Alt+F12: Toggle</div>
+      <div class="header">
+        <h1>ClipArt</h1>
+      </div>
+      <div class="list">${list || '<div class="empty"><p>Copy something with Ctrl+C to get started</p></div>'}</div>
+      <div class="footer">
+        <span>Press <span class="shortcut">Ctrl+Alt+F12</span> to toggle</span>
+        <span>F1-F10 for quick paste</span>
+      </div>
     </div>
   `;
 
