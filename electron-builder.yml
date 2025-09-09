@@ -1,15 +1,52 @@
-appId: com.example.clipart
-productName: clipART
+appId: com.clipart.app
+productName: ClipArt
+asar: true
+compression: normal
+
 files:
   - dist/**/*
   - package.json
+
 directories:
   output: release
+
 extraMetadata:
   main: dist/main.js
+
 win:
+  icon: src/icon.ico
   target:
     - nsis
-asar: true
+  artifactName: "${productName}-${version}-win-${arch}.${ext}"
+  publisherName: "ClipArt"
+  legalTrademarks: "ClipArt"
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ClipArt
+
+mac:
+  icon: src/icon.png
+  category: public.app-category.utilities
+  target:
+    - dmg
+    - zip
+  artifactName: "${productName}-${version}-mac-${arch}.${ext}"
+
+dmg:
+  sign: false
+
+linux:
+  icon: src/icon.png
+  category: Utility
+  target:
+    - AppImage
+    - deb
+  artifactName: "${productName}-${version}-linux-${arch}.${ext}"
+
 
 
