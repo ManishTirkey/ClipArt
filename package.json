@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
+    "prebuild": "npm run icons",
     "build": "tsc && node ./scripts/copy-static.cjs",
     "dev": "concurrently \"tsc -w\" \"wait-on dist/preload.js && node ./scripts/copy-static.cjs --watch\" \"electron .\"",
     "start": "electron .",
