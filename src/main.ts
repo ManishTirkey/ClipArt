@@ -17,6 +17,7 @@ let clipHistory: ClipItem[] = [];
 let lastClipboardText = '';
 let firstCopyShown = false; // retained but no longer used for gating visibility
 let activeToggleAccelerator: string = 'Control+Alt+F12';
+let contentProtectionEnabled: boolean = false;
 
 function broadcastToggleAccelerator() {
   for (const win of windowsByDisplayId.values()) {
@@ -79,6 +80,7 @@ function createWindowForDisplay(display: Electron.Display) {
   win.loadFile(path.join(__dirname, 'index.html'));
   win.webContents.on('did-finish-load', () => {
     broadcastToggleAccelerator();
+    try { win.setContentProtection(contentProtectionEnabled); } catch {}
   });
   win.on('closed', () => {
     windowsByDisplayId.delete(id);
@@ -228,6 +230,14 @@ app.on('will-quit', () => {
 // IPC
 ipcMain.handle('clips:get', () => clipHistory);
 ipcMain.handle('shortcut:getToggle', () => activeToggleAccelerator);
+ipcMain.handle('cp:get', () => contentProtectionEnabled);
+ipcMain.on('cp:set', (_e, enabled: boolean) => {
+  contentProtectionEnabled = !!enabled;
+  for (const win of windowsByDisplayId.values()) {
+    try { win.setContentProtection(contentProtectionEnabled); } catch {}
+    try { win.webContents.send('cp:changed', contentProtectionEnabled); } catch {}
+  }
+});
 ipcMain.on('clips:select', (_e, id: string) => {
   const item = clipHistory.find(c => c.id === id);
   if (!item) return;

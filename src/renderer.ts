@@ -25,6 +25,11 @@ function render(clips: ClipItem[], highlightId?: string) {
     <div class="container">
       <div class="header">
         <h1>ClipArt</h1>
+        <div class="spacer"></div>
+        <label class="switch" title="Content protection (prevents screenshots)">
+          <input type="checkbox" id="cp-toggle" />
+          <span class="slider"></span>
+        </label>
       </div>
       <div class="list">${list || '<div class="empty"><p>Copy something with Ctrl+C to get started</p></div>'}</div>
       <div class="footer">
@@ -38,6 +43,13 @@ function render(clips: ClipItem[], highlightId?: string) {
     el.addEventListener('click', () => {
       const id = (el as HTMLElement).dataset.id!;
       window.clipAPI.selectClip(id);
+    });
+  }
+
+  const cp = document.getElementById('cp-toggle') as HTMLInputElement | null;
+  if (cp) {
+    cp.addEventListener('change', () => {
+      (window.clipAPI as any).setContentProtection?.(cp.checked);
     });
   }
 }
@@ -73,6 +85,16 @@ window.clipAPI.onHighlight(id => {
 (window.clipAPI as any).onToggleAccelerator?.((accel: string) => {
   const el = document.getElementById('toggle-accel');
   if (el) el.textContent = accel.replace('Control', 'Ctrl');
+});
+
+// Sync content protection state from main
+(window.clipAPI as any).getContentProtection?.().then((enabled: boolean) => {
+  const cp = document.getElementById('cp-toggle') as HTMLInputElement | null;
+  if (cp) cp.checked = !!enabled;
+});
+(window.clipAPI as any).onContentProtectionChanged?.((enabled: boolean) => {
+  const cp = document.getElementById('cp-toggle') as HTMLInputElement | null;
+  if (cp) cp.checked = !!enabled;
 });
 
 

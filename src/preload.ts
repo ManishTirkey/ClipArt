@@ -9,6 +9,13 @@ contextBridge.exposeInMainWorld('clipAPI', {
     ipcRenderer.on('shortcut:toggle', listener);
     return () => ipcRenderer.removeListener('shortcut:toggle', listener);
   },
+  getContentProtection: async () => ipcRenderer.invoke('cp:get'),
+  setContentProtection: (enabled: boolean) => ipcRenderer.send('cp:set', enabled),
+  onContentProtectionChanged: (cb: (enabled: boolean) => void) => {
+    const listener = (_: any, enabled: boolean) => cb(enabled);
+    ipcRenderer.on('cp:changed', listener);
+    return () => ipcRenderer.removeListener('cp:changed', listener);
+  },
   onUpdate: (cb: (clips: any[]) => void) => {
     const listener = (_: any, clips: any[]) => cb(clips);
     ipcRenderer.on('clips:update', listener);
