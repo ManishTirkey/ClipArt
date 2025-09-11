@@ -1,6 +1,6 @@
 {
   "name": "clipart",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "ClipArt is a lightweight, always-ready clipboard companion that mirrors the Windows clipboard and adds a fast, keyboard-driven UI. It shows your last copies, lets you paste the top 10 instantly with global hotkeys, and stays fixed at the bottom-right on every monitor.",
   "main": "dist/main.js",
   "scripts": {
