@@ -28,7 +28,7 @@ function render(clips: ClipItem[], highlightId?: string) {
       </div>
       <div class="list">${list || '<div class="empty"><p>Copy something with Ctrl+C to get started</p></div>'}</div>
       <div class="footer">
-        <span>Press <span class="shortcut">Ctrl+Alt+F12</span> to toggle</span>
+        <span>Press <span class="shortcut" id="toggle-accel">Ctrl+Alt+F12</span> to toggle</span>
         <span>F1-F10 for quick paste</span>
       </div>
     </div>
@@ -67,6 +67,12 @@ window.clipAPI.onUpdate(clips => {
 window.clipAPI.onHighlight(id => {
   highlightedId = id;
   render(current, highlightedId);
+});
+
+// Update the displayed accelerator once known
+(window.clipAPI as any).onToggleAccelerator?.((accel: string) => {
+  const el = document.getElementById('toggle-accel');
+  if (el) el.textContent = accel.replace('Control', 'Ctrl');
 });
 
 

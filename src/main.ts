@@ -16,6 +16,13 @@ let tray: Tray | null = null;
 let clipHistory: ClipItem[] = [];
 let lastClipboardText = '';
 let firstCopyShown = false; // retained but no longer used for gating visibility
+let activeToggleAccelerator: string = 'Control+Alt+F12';
+
+function broadcastToggleAccelerator() {
+  for (const win of windowsByDisplayId.values()) {
+    try { win.webContents.send('shortcut:toggle', activeToggleAccelerator); } catch {}
+  }
+}
 
 function areAnyVisible(): boolean {
   return Array.from(windowsByDisplayId.values()).some(w => w.isVisible());
@@ -70,6 +77,9 @@ function createWindowForDisplay(display: Electron.Display) {
   try { win.setVisibleOnAllWorkspaces?.(true, { visibleOnFullScreen: true }); } catch {}
 
   win.loadFile(path.join(__dirname, 'index.html'));
+  win.webContents.on('did-finish-load', () => {
+    broadcastToggleAccelerator();
+  });
   win.on('closed', () => {
     windowsByDisplayId.delete(id);
   });
@@ -114,10 +124,25 @@ function pollClipboard() {
 }
 
 function registerShortcuts() {
-  // Toggle visibility: Ctrl+Alt+F12
-  globalShortcut.register('Control+Alt+F12', () => {
-    toggleAll();
-  });
+  // Prefer F12, but fall back if taken (e.g., Intel graphics hotkeys)
+  const toggleCandidates = [
+    'Control+Alt+F12',
+    'Control+Alt+`',
+    'Control+Alt+\\',
+    'Control+Alt+0'
+  ];
+  for (const candidate of toggleCandidates) {
+    try {
+      globalShortcut.register(candidate, () => {
+        toggleAll();
+      });
+      if (globalShortcut.isRegistered(candidate)) {
+        activeToggleAccelerator = candidate;
+        broadcastToggleAccelerator();
+        break;
+      }
+    } catch {}
+  }
 
   // Slots F1..F10 for quick paste
   for (let i = 1; i <= VISIBLE_SLOTS; i += 1) {
@@ -202,6 +227,7 @@ app.on('will-quit', () => {
 
 // IPC
 ipcMain.handle('clips:get', () => clipHistory);
+ipcMain.handle('shortcut:getToggle', () => activeToggleAccelerator);
 ipcMain.on('clips:select', (_e, id: string) => {
   const item = clipHistory.find(c => c.id === id);
   if (!item) return;
