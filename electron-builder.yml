@@ -16,7 +16,7 @@ extraMetadata:
 publish:
   - provider: github
     owner: ManishTirkey
-    repo: clipART
+    repo: ClipArt
 
 win:
   icon: src/icon.ico

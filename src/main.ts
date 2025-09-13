@@ -1,4 +1,5 @@
-import { app, BrowserWindow, globalShortcut, clipboard, ipcMain, nativeTheme, screen, Tray, Menu } from 'electron';
+import { app, BrowserWindow, globalShortcut, clipboard, ipcMain, nativeTheme, screen, Tray, Menu, dialog } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
 
@@ -184,6 +185,8 @@ function updateTrayMenu() {
   const menu = Menu.buildFromTemplate([
     { label: anyVisible ? 'Hide' : 'Show', click: () => toggleAll() },
     { type: 'separator' },
+    { label: 'Check for updates…', click: () => checkForUpdatesManually() },
+    { type: 'separator' },
     { 
       label: 'Start at Login', 
       type: 'checkbox', 
@@ -221,6 +224,10 @@ app.whenReady().then(() => {
   screen.on('display-removed', () => {
     createWindowsForAllDisplays();
   });
+
+  setupAutoUpdater();
+  // Check on startup, but do not auto-download until user confirms
+  autoUpdater.checkForUpdates().catch(() => {});
 });
 
 app.on('will-quit', () => {
@@ -245,4 +252,97 @@ ipcMain.on('clips:select', (_e, id: string) => {
   lastClipboardText = item.text;
   for (const w of windowsByDisplayId.values()) w.webContents.send('clips:highlight', item.id);
 });
+
+// Auto-update integration
+let isManualCheck = false;
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = false; // prompt before downloading
+  autoUpdater.autoInstallOnAppQuit = true;
+  
+  // Set the feed URL for GitHub releases
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'ManishTirkey',
+    repo: 'ClipArt'
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    const result = dialog.showMessageBoxSync({
+      type: 'info',
+      title: 'Update available',
+      message: `A new version (${info.version}) is available.`,
+      detail: 'Would you like to download and install it now?',
+      buttons: ['Update', 'Later'],
+      cancelId: 1,
+      defaultId: 0,
+      noLink: true
+    });
+    if (result === 0) {
+      autoUpdater.downloadUpdate().catch(() => {});
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    // Notify only when user triggers manual check
+    if (isManualCheck) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'No updates',
+        message: 'You are on the latest version.'
+      }).catch(() => {});
+    }
+    isManualCheck = false;
+  });
+
+  autoUpdater.on('download-progress', () => {
+    // Minimal UX; could add tray balloon later
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    const result = dialog.showMessageBoxSync({
+      type: 'question',
+      title: 'Install update',
+      message: 'Update downloaded. Install and restart now?',
+      buttons: ['Install and Restart', 'Later'],
+      cancelId: 1,
+      defaultId: 0,
+      noLink: true
+    });
+    if (result === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  autoUpdater.on('error', (error) => {
+    console.error('Auto-updater error:', error);
+    // Only show error dialog for manual checks, not automatic ones
+    if (isManualCheck) {
+      dialog.showMessageBox({
+        type: 'error',
+        title: 'Update check failed',
+        message: 'Could not check for updates. Please try again later.',
+        detail: error.message || 'Unknown error occurred'
+      }).catch(() => {});
+    }
+  });
+}
+
+function checkForUpdatesManually() {
+  isManualCheck = true;
+  console.log('Checking for updates...');
+  console.log('Current version:', app.getVersion());
+  console.log('Feed URL:', autoUpdater.getFeedURL());
+  
+  autoUpdater.checkForUpdates().catch((error) => {
+    console.error('Update check failed:', error);
+    isManualCheck = false;
+    dialog.showMessageBox({
+      type: 'error',
+      title: 'Update check failed',
+      message: 'Could not check for updates. Please try again later.',
+      detail: `Error: ${error.message || 'Unknown error occurred'}\n\nThis might be because the latest.yml file is not available on GitHub.`
+    }).catch(() => {});
+  });
+}
 
