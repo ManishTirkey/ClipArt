@@ -82,6 +82,11 @@ function createWindowForDisplay(display: Electron.Display) {
   win.webContents.on('did-finish-load', () => {
     broadcastToggleAccelerator();
     try { win.setContentProtection(contentProtectionEnabled); } catch {}
+    
+    // Open DevTools in detach mode for debugging
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true') {
+      win.webContents.openDevTools({ mode: 'detach' });
+    }
   });
   win.on('closed', () => {
     windowsByDisplayId.delete(id);
@@ -159,6 +164,17 @@ function registerShortcuts() {
       for (const w of windowsByDisplayId.values()) w.webContents.send('clips:highlight', item.id);
     });
   }
+  
+  // DevTools toggle shortcut
+  globalShortcut.register('Control+Alt+D', () => {
+    for (const win of windowsByDisplayId.values()) {
+      if (win.webContents.isDevToolsOpened()) {
+        win.webContents.closeDevTools();
+      } else {
+        win.webContents.openDevTools({ mode: 'detach' });
+      }
+    }
+  });
 }
 
 function setupTray() {

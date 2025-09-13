@@ -21,8 +21,26 @@ function render(clips: ClipItem[], highlightId?: string) {
       `;
     })
     .join('');
+
+  // Determine responsive classes based on number of clips
+  const clipCount = clips.length;
+  let containerClass = '';
+  let listClass = '';
+  
+  // More granular responsive breakpoints
+  // if (clipCount >= 20) {
+  //   containerClass = 'tight';
+  //   listClass = 'tight';
+  // } else if (clipCount >= 12) {
+  //   containerClass = 'compact';
+  //   listClass = 'compact';
+  // } else if (clipCount >= 6) {
+  //   containerClass = 'semi-compact';
+  //   listClass = 'semi-compact';
+  // }
+
   appRoot.innerHTML = `
-    <div class="container">
+    <div class="container ${containerClass}">
       <div class="header">
         <h1>ClipArt</h1>
         <div class="spacer"></div>
@@ -31,7 +49,7 @@ function render(clips: ClipItem[], highlightId?: string) {
           <span class="slider"></span>
         </label>
       </div>
-      <div class="list">${list || '<div class="empty"><p>Copy something with Ctrl+C to get started</p></div>'}</div>
+      <div class="list ${listClass}">${list || '<div class="empty"><p>Copy something with Ctrl+C to get started</p></div>'}</div>
       <div class="footer">
         <span>Press <span class="shortcut" id="toggle-accel">Ctrl+Alt+F12</span> to toggle</span>
         <span>F1-F10 for quick paste</span>
